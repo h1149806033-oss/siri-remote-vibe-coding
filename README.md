@@ -60,7 +60,7 @@ The step-by-step setup guide below is currently in Chinese; this English section
 | 路径 | 内容 |
 |---|---|
 | `README.md` | 单文件文档：完整配置、按键、安装、踩坑与排查 |
-| `assets/` | README 里的两张实拍配图 |
+| `assets/` | README 里的实拍配图和按键映射图 |
 | `vendor/HyperVibe-0.2.0-beta.9-macOS-arm64.zip` | 上游官方 App-only 包，约 4.2 MB |
 | `vendor/HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg` | 上游官方 Full Setup 包，约 4.7 MB，含麦克风驱动与守护进程 |
 | `vendor/SHA256SUMS.txt` | 上述两个包的 SHA256 |
@@ -353,6 +353,10 @@ srm_router: voice stream 0x004A/ATT-0x0035
 
 ## 按键映射
 
+下面这张图是完整按键映射（中文 + English）：
+
+![Siri Remote 按键映射](assets/siri-remote-keymap.png)
+
 | 操作 | 实际发送 | 说明 |
 |---|---|---|
 | 触控板移动 | 光标移动 | 支持加速度和轻点点击 |
@@ -364,7 +368,7 @@ srm_router: voice stream 0x004A/ATT-0x0035
 | TV | Command-Tab | 切换应用 |
 | Play/Pause ⏯ | Return / 回车 | 聊天窗口发送 |
 | Siri（按住） | 右侧 Command | 触发豆包长按说话 |
-| 音量 + / - | 未绑定 | 可自行加映射 |
+| 音量 + / - | 系统音量 | HyperVibe 配置未自定义；按键本身可调音量 |
 | 电源 | 未绑定 | 绑定前先看 HyperVibe README 的系统设置说明 |
 | 静音 | 未绑定 | 可自行加映射 |
 
