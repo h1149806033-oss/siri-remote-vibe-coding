@@ -3,6 +3,8 @@
 > Siri Remote as a Mac Trackpad + Voice Remote
 >
 > Turn an Apple Siri Remote (3rd gen, A2854) into a Mac trackpad, arrow-key pad, and push-to-talk voice remote.
+>
+> [English introduction ↓](#english)
 
 <p align="center">
   <img src="assets/siri-remote-hand.jpg" alt="手持 Siri Remote 3rd gen" width="48%">
@@ -26,6 +28,30 @@
 现在的状态是：坐着，拇指动一动就能移动光标、点按、切应用、删字、发消息；要说话就按住 Siri 键，松开文字就上屏。两三个 AI 轮流干活，也不用离开椅子去摸键盘鼠标。
 
 这大概就是我想要的 Vibe Coding：人坐着，想法流动，手不用忙。
+
+## English
+
+**Boss Remote: Vibe Coding from the couch**
+
+Most hardware out there isn't really built for hands-free Vibe Coding.
+
+I started with a Xiaomi Remote 2 Pro and an open-source project called [SayAll (HD838A/remote-mic-app)](https://github.com/HD838A/remote-mic-app). It turns the Xiaomi Bluetooth remote into a wireless Mac microphone: hold the voice button, talk, and the text lands in whatever field has focus. That was genuinely useful, but something was still missing. When I had two or three AIs running and kept switching windows to check results, I still had to drag the cursor to a button and click. Voice freed my mouth; my hands were still busy.
+
+This Siri Remote setup grew out of that experiment. SayAll was the moment I realized a remote could be a Mac input device; everything here follows that thread.
+
+Then I saw Huawei's Lingxi remote and its "point anywhere" air-mouse idea, and wondered whether a computer could work the same way. Later I thought of the Apple TV remote: it already has a trackpad and a microphone. It felt like it was made for Vibe Coding.
+
+So this is "Boss Remote": an Apple Siri Remote (3rd gen, A2854) as the trackpad and microphone, [HyperVibe (SiriRemoteForge)](https://github.com/HOLODATA-COM/SiriRemoteForge) to connect the remote's buttons, touch surface, and mic to the Mac, and the Doubao IME (a Chinese input method with strong speech recognition) for speech recognition and text insertion.
+
+A shout-out to HyperVibe: it turns the Siri Remote's touch surface into a Mac cursor and maps its buttons to keyboard actions. Its `Full Setup` also exposes the remote microphone as a system input device called `Siri Remote Mic`. Without it, this would have stayed an idea.
+
+Speaking is simply faster than typing, especially when you're trying to capture a thought before it disappears. Doubao's speech recognition also structures the result for you: it adds bullet points, reorganizes sentences, and handles punctuation well enough that I rarely have to clean it up.
+
+The current workflow: I sit down, move the cursor with my thumb, click, switch apps, delete text, and send messages. When I want to talk, I hold the Siri button and release it when I'm done. Two or three AIs can take turns without me reaching for the keyboard or mouse.
+
+That's the Vibe Coding I wanted: a human sitting down, ideas flowing, hands free.
+
+The step-by-step setup guide below is currently in Chinese; this English section is here so English readers can see what the project is about.
 
 ---
 
