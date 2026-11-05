@@ -1,4 +1,4 @@
-# 老板遥控：坐着就能 Vibe Coding
+# 老板遥控boss-remote：坐着就能 Vibe Coding
 
 > Siri Remote as a Mac Trackpad + Voice Remote
 >
