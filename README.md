@@ -1,18 +1,24 @@
 # Siri Remote as a Mac Trackpad + Voice Remote
 
 > Turn an Apple Siri Remote (3rd gen, A2854) into a Mac trackpad, arrow-key pad, and push-to-talk voice remote.
->
-> 用 Apple Siri Remote（第 3 代，A2854，USB-C）把 Mac 变成「遥控器 + 触控板 + 语音输入」工作站。
 
-这套方案把三件事拼在一起：
+## 老板遥控：坐着就能 Vibe Coding
 
-- **HyperVibe / SiriRemoteForge**：把 Siri Remote 的触控板和按键变成 Mac 的光标/键盘事件。
-- **HyperVibe Full Setup 的 Siri Remote Mic**：把遥控器麦克风的音频暴露成 macOS 的虚拟输入设备。
-- **豆包输入法**：负责中文语音识别和上屏。
+市面上的硬件，其实没多少是真正为「解放双手的 Vibe Coding」准备的。
 
-一个遥控器同时解决「移动鼠标」和「按住说话」，不需要再买第二只麦克风或第二套遥控器。
+我一开始买了个小米遥控器 2 Pro，用语音输入确实方便，但总觉得差点什么：同时开两三个 AI 干活，或者来回切窗口看结果时，还是得把光标拖到按钮上点一下。语音解放了嘴，手还没完全解放。
 
-<!-- 项目简介：由仓库作者补充。 -->
+后来看到华为灵犀遥控「指哪打哪」，就想着电脑是不是也能这么干。再后来想到 Apple TV 的遥控器：自带触控板，还自带麦克风——这简直是为 Vibe Coding 而生的。
+
+于是就有了这套「老板遥控」：用 Apple Siri Remote（第 3 代，A2854）当触控板和麦克风，配合开源项目 [HyperVibe（SiriRemoteForge）](https://github.com/HOLODATA-COM/SiriRemoteForge) 把遥控器的按键、触控板和麦克风接到 Mac 上，再用豆包输入法负责语音识别和上屏。
+
+这里必须给 HyperVibe 打个 call：它把 Siri Remote 的触控板变成 Mac 光标、把按键映射成键盘操作；Full Setup 还会把遥控器麦克风暴露成系统里的「Siri Remote Mic」。没有它，这套东西只能停在想象里。
+
+语音输入天生比打字快，尤其是描述一个刚冒出来的想法时——想法转瞬即逝，说出来比敲出来更接近原样。豆包的语音识别会自动分点、罗列、重新组织，标点也处理得很顺，基本不用再修。
+
+现在的状态是：坐着，拇指动一动就能移动光标、点按、切应用、删字、发消息；要说话就按住 Siri 键，松开文字就上屏。两三个 AI 轮流干活，也不用离开椅子去摸键盘鼠标。
+
+这大概就是我想要的 Vibe Coding：人坐着，想法流动，手不用忙。
 
 ---
 
