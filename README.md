@@ -6,7 +6,9 @@
 
 市面上的硬件，其实没多少是真正为「解放双手的 Vibe Coding」准备的。
 
-我一开始买了个小米遥控器 2 Pro，用语音输入确实方便，但总觉得差点什么：同时开两三个 AI 干活，或者来回切窗口看结果时，还是得把光标拖到按钮上点一下。语音解放了嘴，手还没完全解放。
+我一开始买了个小米遥控器 2 Pro，折腾的是开源项目 [无线麦 SayAll（HD838A/remote-mic-app）](https://github.com/HD838A/remote-mic-app)——它把小米蓝牙遥控器 2 / 2 Pro 变成 Mac 的无线麦克风，按住语音键就能往任意输入框里说话。用起来确实方便，但总觉得差点什么：同时开两三个 AI 干活，或者来回切窗口看结果时，还是得把光标拖到按钮上点一下。语音解放了嘴，手还没完全解放。
+
+这套 Siri Remote 方案，最早就是在 SayAll 上折腾小米遥控器时得到的灵感——沿着「遥控器也可以当 Mac 输入设备」这条线继续往下走。没有它，我大概不会想到把遥控器接到 Mac 上。
 
 后来看到华为灵犀遥控「指哪打哪」，就想着电脑是不是也能这么干。再后来想到 Apple TV 的遥控器：自带触控板，还自带麦克风——这简直是为 Vibe Coding 而生的。
 
@@ -500,6 +502,7 @@ Full Setup 的麦克风采集依赖 Apple PacketLogger。如果安装器或日�
 
 ## 参考与致谢
 
+- [无线麦 SayAll（HD838A/remote-mic-app）](https://github.com/HD838A/remote-mic-app) — 最早用小米蓝牙遥控器 2 / 2 Pro 做 Mac 语音输入的开源项目；本方案的灵感来源。感谢 @HD838A。
 - [HyperVibe / SiriRemoteForge](https://github.com/HOLODATA-COM/SiriRemoteForge) — 触控板、按键映射、Full Setup、Siri Remote Mic。
 - [AppleInsider: How to turn a Siri Remote into a handy Mac controller](https://appleinsider.com/inside/siri-remote/tips/how-to-turn-a-siri-remote-into-a-handy-mac-controller) — 配对与 Mac 使用背景。
 - [iospirit: I can't pair the Siri Remote with my Mac](https://www.iospirit.com/support/faqs/remotebuddy/siri-remote/problems-pairing-siri-remote-with-macos) — 配对排查。
