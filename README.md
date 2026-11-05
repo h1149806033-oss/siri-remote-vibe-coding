@@ -1,8 +1,8 @@
-# Siri Remote as a Mac Trackpad + Voice Remote
+# 老板遥控：坐着就能 Vibe Coding
 
+> Siri Remote as a Mac Trackpad + Voice Remote
+>
 > Turn an Apple Siri Remote (3rd gen, A2854) into a Mac trackpad, arrow-key pad, and push-to-talk voice remote.
-
-## 老板遥控：坐着就能 Vibe Coding
 
 市面上的硬件，其实没多少是真正为「解放双手的 Vibe Coding」准备的。
 
