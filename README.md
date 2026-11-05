@@ -85,6 +85,15 @@ The step-by-step setup guide below is currently in Chinese; this English section
 
 ---
 
+## 平台支持
+
+- **macOS**：本方案完整验证。Apple Silicon + macOS 27.0.1；Siri Remote 作为标准蓝牙 HID 设备连接，HyperVibe 处理触控板和按键，Full Setup 暴露麦克风。macOS 上这套链路是原生适配的。
+- **Windows**：尚未验证。蓝牙 HID 和麦克风大概率能工作，但触控板/手势需要单独做驱动或映射（HyperVibe 是 macOS 应用）。等跑通后会补充说明。
+
+macOS is fully tested. Windows is untested: Bluetooth HID and the microphone should mostly work, but the touch surface will need separate mapping. I'll update this once it's verified.
+
+---
+
 ## 能做什么
 
 - 触控板移动光标，轻点点击，按住中心键 0.5 秒开始拖拽。
@@ -157,7 +166,7 @@ Siri Remote 的优势是：**触控板 + 麦克风在同一只遥控器上**，�
   - 不要只装 App；Full Setup 才会安装麦克风驱动和采集守护进程。只想先试触控板时，可以用 `vendor/HyperVibe-0.2.0-beta.9-macOS-arm64.zip`（App-only，没有麦克风驱动）。
 - Apple **PacketLogger**（来自 Apple Developer 的 Additional Tools for Xcode）。
   - Full Setup 的麦克风链路需要它；如果安装器提示缺失，把 `PacketLogger.app` 放到 `/Applications`。
-- 豆包输入法。
+- 豆包输入法：[官方下载](https://shurufa.doubao.com/pc)。本仓库不附带安装包，避免闭源软件再分发和版本过期。
 - 可选：Apple TV 先断电，避免它把遥控器抢回去。Siri Remote 同一时间只连一个设备。
 
 ---
@@ -292,7 +301,7 @@ HyperVibe 会监听这个文件并热加载；保存后不需要重启。
 
 ### 4. 配置豆包输入法
 
-1. 安装豆包输入法，并在 **系统设置 → 键盘 → 输入法** 中添加。
+1. 从[豆包输入法官方下载页](https://shurufa.doubao.com/pc)安装，并在 **系统设置 → 键盘 → 输入法** 中添加。
 2. 打开豆包输入法的语音设置：
    - **快捷键**：按住**右侧 Command（右⌘）**。
    - **模式**：长按说话 / 按住说话（不要选点击说话）。
@@ -540,6 +549,7 @@ Full Setup 的麦克风采集依赖 Apple PacketLogger。如果安装器或日�
 
 - [无线麦 SayAll（HD838A/remote-mic-app）](https://github.com/HD838A/remote-mic-app) — 最早用小米蓝牙遥控器 2 / 2 Pro 做 Mac 语音输入的开源项目；本方案的灵感来源。感谢 @HD838A。
 - [HyperVibe / SiriRemoteForge](https://github.com/HOLODATA-COM/SiriRemoteForge) — 触控板、按键映射、Full Setup、Siri Remote Mic。
+- [豆包输入法官方下载](https://shurufa.doubao.com/pc) — 语音识别与上屏。
 - [AppleInsider: How to turn a Siri Remote into a handy Mac controller](https://appleinsider.com/inside/siri-remote/tips/how-to-turn-a-siri-remote-into-a-handy-mac-controller) — 配对与 Mac 使用背景。
 - [iospirit: I can't pair the Siri Remote with my Mac](https://www.iospirit.com/support/faqs/remotebuddy/siri-remote/problems-pairing-siri-remote-with-macos) — 配对排查。
 - [BetterTouchTool: Siri Remote Triggers](https://docs.folivora.ai/docs/other-triggers/siri-remote/) — Siri Remote 输入键位参考。
