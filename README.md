@@ -60,7 +60,7 @@ The step-by-step setup guide below is currently in Chinese; this English section
 | 路径 | 内容 |
 |---|---|
 | `README.md` | 单文件文档：完整配置、按键、安装、踩坑与排查 |
-| `assets/` | README 里的实拍配图和按键映射图 |
+| `assets/` | README 里的实拍配图、按键映射图和豆包设置截图 |
 | `vendor/HyperVibe-0.2.0-beta.9-macOS-arm64.zip` | 上游官方 App-only 包，约 4.2 MB |
 | `vendor/HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg` | 上游官方 Full Setup 包，约 4.7 MB，含麦克风驱动与守护进程 |
 | `vendor/SHA256SUMS.txt` | 上述两个包的 SHA256 |
@@ -318,6 +318,10 @@ HyperVibe 会监听这个文件并热加载；保存后不需要重启。
 >
 > - **麦克风一定要选 `Siri Remote Mic`**。选 Mac 内置麦克风，遥控器的声音进不来，豆包可能完全没反应。
 > - **长按快捷键必须和 HyperVibe 对齐**。默认两边都是右侧 Command（右⌘）：HyperVibe 的 `button.siri` 是 `repeatKey` + `keys: "rcmd"`，豆包这边是「长按模式 → 右⌘」。只改一边，会出现“有语音 HUD、但不出字”。
+
+豆包设置示意：
+
+![豆包输入法语音设置：长按模式右⌘，麦克风 Siri Remote Mic](assets/doubao-voice-settings.png)
 
 ### 5. 验证
 
