@@ -12,6 +12,21 @@
 
 一个遥控器同时解决「移动鼠标」和「按住说话」，不需要再买第二只麦克风或第二套遥控器。
 
+<!-- 项目简介：由仓库作者补充。 -->
+
+---
+
+## 本仓库内容
+
+| 路径 | 内容 |
+|---|---|
+| `README.md` | 单文件文档：完整配置、按键、安装、踩坑与排查 |
+| `vendor/HyperVibe-0.2.0-beta.9-macOS-arm64.zip` | 上游官方 App-only 包，约 4.2 MB |
+| `vendor/HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg` | 上游官方 Full Setup 包，约 4.7 MB，含麦克风驱动与守护进程 |
+| `vendor/SHA256SUMS.txt` | 上述两个包的 SHA256 |
+
+两个二进制包都是上游官方 Release 的原样转载，未做修改。校验方法见「安装 HyperVibe + Full Setup」。HyperVibe 以 GPLv3 发布，许可证随包附带；源码与新版见[上游 Release](https://github.com/HOLODATA-COM/SiriRemoteForge/releases/tag/v0.2.0-beta.9)。
+
 ---
 
 ## 实测环境
@@ -98,7 +113,8 @@ Siri Remote 的优势是：**触控板 + 麦克风在同一只遥控器上**，�
 ### 软件
 
 - [HyperVibe / SiriRemoteForge](https://github.com/HOLODATA-COM/SiriRemoteForge) 的 **Full Setup** 安装包。
-  - 不要只装 App；Full Setup 才会安装麦克风驱动和采集守护进程。
+  - 本仓库 `vendor/` 已附带官方 `HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg`；也可以从上游 Releases 下载最新版。
+  - 不要只装 App；Full Setup 才会安装麦克风驱动和采集守护进程。只想先试触控板时，可以用 `vendor/HyperVibe-0.2.0-beta.9-macOS-arm64.zip`（App-only，没有麦克风驱动）。
 - Apple **PacketLogger**（来自 Apple Developer 的 Additional Tools for Xcode）。
   - Full Setup 的麦克风链路需要它；如果安装器提示缺失，把 `PacketLogger.app` 放到 `/Applications`。
 - 豆包输入法。
@@ -133,17 +149,29 @@ system_profiler SPBluetoothDataType | grep -i -A 8 'siri'
 
 ### 2. 安装 HyperVibe + Full Setup
 
-1. 从 HyperVibe Releases 下载 **Full Setup** PKG。
-2. 如果安装器提示缺少 PacketLogger：
+1. 安装 **Full Setup** PKG（推荐）：
+   - 本仓库：`vendor/HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg`；
+   - 或上游 Releases 的最新 Full Setup。
+   - PKG 未签名，安装时用 **Control-click → 打开**。
+   - 只想先试触控板：解压 `vendor/HyperVibe-0.2.0-beta.9-macOS-arm64.zip`，把 `HyperVibe.app` 拖到 `/Applications`；这个包没有 `Siri Remote Mic`。
+2. 安装前建议校验：
+
+   ```bash
+   cd vendor
+   shasum -a 256 -c SHA256SUMS.txt
+   ```
+
+   应输出两个 `OK`。`vendor/` 里的文件是上游官方发布包的原样转载；许可证在 App 包内，源码见上游 `v0.2.0-beta.9`。
+3. 如果安装器提示缺少 PacketLogger：
    - 安装 Apple Developer 的 **Additional Tools for Xcode**；
    - 把 `PacketLogger.app` 拷到 `/Applications`。
-3. 安装完成后打开 HyperVibe。
-4. 按向导授予权限：
+4. 安装完成后打开 HyperVibe。
+5. 按向导授予权限：
    - **蓝牙**：连接遥控器。
    - **输入监控（Input Monitoring）**：读取遥控器按键。
    - **辅助功能（Accessibility）**：发送光标/键盘事件、窗口控制。
    - 如果使用 HyperVibe 自带转写，再授予**麦克风**；本方案用豆包识别，麦克风主要给豆包。
-5. 如果 HyperVibe 没有出现在权限列表里，点 `+` 手动添加 `/Applications/HyperVibe.app`。
+6. 如果 HyperVibe 没有出现在权限列表里，点 `+` 手动添加 `/Applications/HyperVibe.app`。
 
 > HyperVibe 的公开版本是 ad-hoc 签名，不是 Apple 公证版本。更新、重装或自行重编译后，macOS 可能把辅助功能/输入监控授权重置，需要重新添加。
 
@@ -157,7 +185,7 @@ system_profiler SPBluetoothDataType | grep -i -A 8 'siri'
 
 HyperVibe 会监听这个文件并热加载；保存后不需要重启。
 
-把下面这段合并进 `modes.global`，或直接参考 [`config.example.jsonc`](config.example.jsonc)：
+下面是本机已验证的完整配置，可以整份替换 `~/.config/siriremote/config.jsonc`；也可以只合并 `modes` / `settings` 里的相关项，缺失项会用默认值：
 
 ```jsonc
 {
@@ -445,6 +473,22 @@ Full Setup 的麦克风采集依赖 Apple PacketLogger。如果安装器或日�
 - 本方案关闭了 HyperVibe 自带转写（`dictation.enabled: false`），语音识别由豆包输入法完成；请自行确认豆包的隐私设置。
 - HyperVibe 是第三方开源项目（GPLv3），与本指南作者无隶属关系。
 - 不要把 Apple 的 PacketLogger 或其他闭源二进制重新分发到你的仓库；在文档里给出 Apple 官方下载入口即可。
+
+---
+
+## 二进制来源与许可证
+
+`vendor/` 中的两个文件来自上游 Release `v0.2.0-beta.9`，SHA256 已核对：
+
+| 文件 | SHA256 |
+|---|---|
+| `HyperVibe-0.2.0-beta.9-macOS-arm64.zip` | `802da5c57af6c9da85136bab2aa42a99244ac48bcfe6f12283fab62438aa1b20` |
+| `HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg` | `05a5aab78fa4526f659d73077010d4a9cf174eed7c06eb5a02572f849097437e` |
+
+- HyperVibe 以 **GPLv3** 发布；App 包内包含 `LICENSE.txt`、`NOTICE.txt`、Sparkle/ThinkingOrbs 许可证。
+- 来源与对应源码：[SiriRemoteForge v0.2.0-beta.9](https://github.com/HOLODATA-COM/SiriRemoteForge/releases/tag/v0.2.0-beta.9)。
+- Full Setup PKG 未签名，App 为 ad-hoc 签名；安装或更新时 macOS 可能要求重新授权。
+- 本仓库未包含 Apple PacketLogger 或其他闭源二进制；PacketLogger 请从 Apple Developer 下载。
 
 ---
 

@@ -1,0 +1,2 @@
+802da5c57af6c9da85136bab2aa42a99244ac48bcfe6f12283fab62438aa1b20  HyperVibe-0.2.0-beta.9-macOS-arm64.zip
+05a5aab78fa4526f659d73077010d4a9cf174eed7c06eb5a02572f849097437e  HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg
