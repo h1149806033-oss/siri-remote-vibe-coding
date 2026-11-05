@@ -4,6 +4,11 @@
 >
 > Turn an Apple Siri Remote (3rd gen, A2854) into a Mac trackpad, arrow-key pad, and push-to-talk voice remote.
 
+<p align="center">
+  <img src="assets/siri-remote-hand.jpg" alt="手持 Siri Remote 3rd gen" width="48%">
+  <img src="assets/siri-remote-macbook.jpg" alt="Siri Remote 放在 MacBook 键盘上" width="48%">
+</p>
+
 市面上的硬件，其实没多少是真正为「解放双手的 Vibe Coding」准备的。
 
 我一开始买了个小米遥控器 2 Pro，折腾的是开源项目 [无线麦 SayAll（HD838A/remote-mic-app）](https://github.com/HD838A/remote-mic-app)——它把小米蓝牙遥控器 2 / 2 Pro 变成 Mac 的无线麦克风，按住语音键就能往任意输入框里说话。用起来确实方便，但总觉得差点什么：同时开两三个 AI 干活，或者来回切窗口看结果时，还是得把光标拖到按钮上点一下。语音解放了嘴，手还没完全解放。
@@ -29,6 +34,7 @@
 | 路径 | 内容 |
 |---|---|
 | `README.md` | 单文件文档：完整配置、按键、安装、踩坑与排查 |
+| `assets/` | README 里的两张实拍配图 |
 | `vendor/HyperVibe-0.2.0-beta.9-macOS-arm64.zip` | 上游官方 App-only 包，约 4.2 MB |
 | `vendor/HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg` | 上游官方 Full Setup 包，约 4.7 MB，含麦克风驱动与守护进程 |
 | `vendor/SHA256SUMS.txt` | 上述两个包的 SHA256 |
