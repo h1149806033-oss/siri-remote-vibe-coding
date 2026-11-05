@@ -1,0 +1,80 @@
+// HyperVibe / SiriRemoteForge 0.2.0-beta.9
+// 目标路径：~/.config/siriremote/config.jsonc
+//
+// 可以整份使用，也可以只把 modes.global 和 settings 里的相关项合并到现有配置。
+// 未列出的设置会使用 HyperVibe 的默认值。
+//
+// 重要：
+// - Siri 键必须用 repeatKey，不能用 pushToTalk；豆包是长按说话模式。
+// - 中间确认键（select）在 HyperVibe 里写死为鼠标点击，button.select 不会生效。
+// - 所以这里用 Play/Pause 键发送回车，并用 .hold 防止长按连发。
+
+{
+  "appProfiles": {
+    "default": "global"
+  },
+  "modes": {
+    "L1": { "inherits": "global" },
+    "L2": { "inherits": "global" },
+    "global": {
+      // 按住 Siri 键 = 按住右侧 Command。
+      // delay / interval 只是 repeatKey 的节奏，不影响按住状态。
+      "button.siri": {
+        "action": "repeatKey",
+        "keys": "rcmd",
+        "delay": 60,
+        "interval": 60
+      },
+
+      // 圆环 = 方向键。
+      "ring.up": { "action": "keystroke", "keys": "up" },
+      "ring.down": { "action": "keystroke", "keys": "down" },
+      "ring.left": { "action": "keystroke", "keys": "left" },
+      "ring.right": { "action": "keystroke", "keys": "right" },
+
+      // Back = 退格，输入文字时直接删字。
+      "button.menu": { "action": "keystroke", "keys": "delete" },
+
+      // TV = Command-Tab。
+      "button.tv": { "action": "keystroke", "keys": "cmd+tab" },
+
+      // Play/Pause = 回车，用于聊天窗口发送。
+      // .hold 绑定到同一个动作，长按时只在松开时发一次，避免连发。
+      "button.playPause": {
+        "action": "keystroke",
+        "keys": "return"
+      },
+      "button.playPause.hold": {
+        "action": "keystroke",
+        "keys": "return"
+      }
+
+      // 注意：下面这行即使写了也不会生效（HyperVibe 把 select 写死为鼠标点击）。
+      // 如果未来版本支持，可以再启用：
+      // "button.select": { "action": "keystroke", "keys": "return" }
+    }
+  },
+  "settings": {
+    // 光标速度：0.6 中等；慢就调大，飘就调小。
+    "cursorSpeed": 0.6,
+
+    // 关闭右上角常驻状态窗（显示 VOICE / PITCH / BRIGHT 的那个）。
+    "statusWidgetEnabled": false,
+
+    // 遥控器连接/断开时的卡片；嫌烦可以改 false。
+    "layerHUDEnabled": true,
+
+    // 长按进度卡片；不需要可以改 false。
+    "holdHUDEnabled": true,
+
+    // 开机自启；需要在 HyperVibe 设置里手动开启，或改成 true。
+    "launchAtLoginEnabled": false,
+
+    // 语音识别交给豆包，HyperVibe 只做输入桥接。
+    "dictation": {
+      "activeMode": "external",
+      "enabled": false,
+      "pipelineOverlayEnabled": false
+    }
+  }
+}
