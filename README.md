@@ -583,6 +583,16 @@ Full Setup 的麦克风采集依赖 Apple PacketLogger。如果安装器或日�
 
 ---
 
+## 支持这个项目
+
+一个人、几个通宵，慢慢磨出来的小工具。如果它让你顺手了一点，随意扫码支持就好。
+
+<p align="center">
+  <img src="assets/support-qr.png" alt="微信赞赏码" width="220">
+</p>
+
+---
+
 ## 参考与致谢
 
 - [无线麦 SayAll（HD838A/remote-mic-app）](https://github.com/HD838A/remote-mic-app) — 最早用小米蓝牙遥控器 2 / 2 Pro 做 Mac 语音输入的开源项目；本方案的灵感来源。感谢 @HD838A。
