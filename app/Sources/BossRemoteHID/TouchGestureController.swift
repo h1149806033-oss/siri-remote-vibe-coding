@@ -52,7 +52,7 @@ public final class TouchGestureController {
     private var tapTravel: CGFloat = 0
     private var didMoveOrScroll = false
     private var isCircular = false
-    private var liftWorkItem: DispatchWorkItem?
+    private var liftWatch: DispatchSourceTimer?
 
     private var velocitySamples: [(time: TimeInterval, distance: CGFloat)] = []
     private var smoothedX: CGFloat = 0
@@ -78,8 +78,6 @@ public final class TouchGestureController {
     public init() {}
 
     public func handle(contacts: [TouchSurface.Contact]) {
-        liftWorkItem?.cancel()
-        liftWorkItem = nil
         let now = ProcessInfo.processInfo.systemUptime
 
         guard !contacts.isEmpty else {
@@ -90,11 +88,9 @@ public final class TouchGestureController {
         let size = averageSize(contacts)
         if !isTouching {
             begin(at: point, size: size, contactCount: contacts.count, now: now)
-            scheduleLiftFallback()
             return
         }
         update(to: point, size: size, at: now)
-        scheduleLiftFallback()
     }
 
     private func begin(
@@ -134,6 +130,7 @@ public final class TouchGestureController {
         peakSize = size
         pressFrozen = false
         freezeOrigin = nil
+        startLiftWatch()
         onLog?(String(
             format: "touch start x=%.3f y=%.3f r=%.3f size=%.3f",
             point.x,
@@ -174,7 +171,7 @@ public final class TouchGestureController {
         }
 
         if isCircular {
-            updateCircular(point: point)
+            updateCircular(point: point, dt: dt)
             return
         }
 
@@ -226,7 +223,7 @@ public final class TouchGestureController {
         emitPointer(smoothedX, smoothedY)
     }
 
-    private func updateCircular(point: CGPoint) {
+    private func updateCircular(point: CGPoint, dt: CGFloat) {
         let angle = atan2(point.y - 0.5, point.x - 0.5)
         guard let lastAngle else {
             self.lastAngle = angle
@@ -259,7 +256,11 @@ public final class TouchGestureController {
         scrollDirection = delta > 0 ? 1 : -1
 
         scrollTarget += -delta * scrollPixelsPerRadian * scrollSpeed
-        scrollSmoothed += (scrollTarget - scrollSmoothed) * scrollEase
+        // Normalise the ease to 60 Hz so an irregular frame rate cannot
+        // change how the scroll feels.
+        let eased = 1 - pow(1 - Double(scrollEase), Double(dt) * 60)
+        scrollSmoothed += (scrollTarget - scrollSmoothed)
+            * CGFloat(min(1, max(0.05, eased)))
         let whole = scrollSmoothed.rounded(.towardZero)
         guard whole != 0 else { return }
         scrollSmoothed -= whole
@@ -392,17 +393,26 @@ public final class TouchGestureController {
         return dy > 0 ? .down : .up
     }
 
-    private func scheduleLiftFallback() {
-        let work = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            let now = ProcessInfo.processInfo.systemUptime
-            let fallbackTime = self.lastFrameAt > self.startedAt
-                ? self.lastFrameAt
-                : now
-            self.finishIfNeeded(at: fallbackTime)
+    /// Some remotes stop sending frames without a final empty one. A single
+    /// low-frequency watch is far cheaper than re-arming a timer every frame,
+    /// which at 90 Hz was allocating on the main queue continuously.
+    private func startLiftWatch() {
+        guard liftWatch == nil else { return }
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now() + 0.35, repeating: 0.1)
+        timer.setEventHandler { [weak self] in
+            guard let self, self.isTouching else { return }
+            let idle = ProcessInfo.processInfo.systemUptime - self.lastFrameAt
+            guard idle > 0.3 else { return }
+            self.finishIfNeeded(at: self.lastFrameAt)
         }
-        liftWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
+        timer.resume()
+        liftWatch = timer
+    }
+
+    private func stopLiftWatch() {
+        liftWatch?.cancel()
+        liftWatch = nil
     }
 
     private func averagePoint(_ contacts: [TouchSurface.Contact]) -> CGPoint? {
@@ -452,5 +462,6 @@ public final class TouchGestureController {
         freezeOrigin = nil
         baselineFrames = 0
         peakSize = 0
+        stopLiftWatch()
     }
 }

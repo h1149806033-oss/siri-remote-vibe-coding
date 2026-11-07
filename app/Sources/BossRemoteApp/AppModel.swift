@@ -79,9 +79,14 @@ final class AppModel: ObservableObject {
         var scopeBundleID: String?
         var doublePress: Bool
     }
-    private var logBytes = -1
+    private var logBytes = 0
+    private let logQueue = DispatchQueue(
+        label: "com.bossremote.runtime-log",
+        qos: .utility
+    )
+    private var logHandle: FileHandle?
     private let logByteLimit = 2 * 1024 * 1024
-    private lazy var logURL: URL = {
+    private let logURL: URL = {
         let base = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
             .first?
             .appendingPathComponent("Logs/BossRemoteDev", isDirectory: true)
@@ -670,26 +675,37 @@ final class AppModel: ObservableObject {
             logLines.removeFirst(logLines.count - 80)
         }
         let line = "\(logFileFormatter.string(from: now)) \(message)\n"
-        guard let data = line.data(using: .utf8) else { return }
-        if logBytes < 0 {
-            let attributes = try? FileManager.default.attributesOfItem(
-                atPath: logURL.path
-            )
-            logBytes = (attributes?[.size] as? NSNumber)?.intValue ?? 0
+        // Opening and closing a file handle on the main thread for every line
+        // cost a frame right as a touch began. Keep one handle and write off
+        // the main queue.
+        logQueue.async { [weak self] in
+            self?.writeToDisk(line)
         }
+    }
+
+    private func writeToDisk(_ line: String) {
+        let data = Data(line.utf8)
+        if logHandle == nil {
+            if !FileManager.default.fileExists(atPath: logURL.path) {
+                FileManager.default.createFile(
+                    atPath: logURL.path,
+                    contents: nil
+                )
+            }
+            logHandle = try? FileHandle(forWritingTo: logURL)
+            logBytes = Int((try? logHandle?.seekToEnd()) ?? 0)
+        }
+        guard let handle = logHandle else { return }
         if logBytes > logByteLimit {
-            try? FileManager.default.removeItem(at: logURL)
+            try? handle.truncate(atOffset: 0)
             logBytes = 0
         }
-        if !FileManager.default.fileExists(atPath: logURL.path) {
-            try? data.write(to: logURL, options: .atomic)
-            logBytes = data.count
-            return
+        do {
+            try handle.seekToEnd()
+            try handle.write(contentsOf: data)
+            logBytes += data.count
+        } catch {
+            logHandle = nil
         }
-        guard let handle = try? FileHandle(forWritingTo: logURL) else { return }
-        defer { try? handle.close() }
-        _ = try? handle.seekToEnd()
-        try? handle.write(contentsOf: data)
-        logBytes += data.count
     }
 }

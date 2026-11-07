@@ -5,6 +5,13 @@ import CoreGraphics
 
 public enum PointerController {
     private static let marker: Int64 = 0x4252_4D54
+    /// One shared source: creating a fresh `CGEventSource` per frame showed up
+    /// as jitter at the 90 Hz the remote reports.
+    private static let hidSource = CGEventSource(stateID: .hidSystemState)
+
+    private static var cursorLocation: CGPoint {
+        CGEvent(source: hidSource)?.location ?? .zero
+    }
 
     public static var hasAccessibility: Bool {
         AXIsProcessTrusted()
@@ -19,10 +26,8 @@ public enum PointerController {
     }
 
     public static func move(dx: CGFloat, dy: CGFloat) {
-        guard hasAccessibility,
-              let source = CGEventSource(stateID: .hidSystemState)
-        else { return }
-        let current = CGEvent(source: nil)?.location ?? .zero
+        guard hasAccessibility, let source = hidSource else { return }
+        let current = cursorLocation
         guard let event = CGEvent(
             mouseEventSource: source,
             mouseType: .mouseMoved,
@@ -36,7 +41,7 @@ public enum PointerController {
     public static func scroll(pixels: Int32) {
         guard hasAccessibility,
               pixels != 0,
-              let source = CGEventSource(stateID: .hidSystemState),
+              let source = hidSource,
               let event = CGEvent(
                   scrollWheelEvent2Source: source,
                   units: .pixel,
@@ -46,7 +51,7 @@ public enum PointerController {
                   wheel3: 0
               )
         else { return }
-        event.location = CGEvent(source: nil)?.location ?? .zero
+        event.location = cursorLocation
         event.setIntegerValueField(.scrollWheelEventIsContinuous, value: 1)
         event.setIntegerValueField(.eventSourceUserData, value: marker)
         event.post(tap: .cghidEventTap)
@@ -86,10 +91,8 @@ public enum PointerController {
     }
 
     public static func click() {
-        guard hasAccessibility,
-              let source = CGEventSource(stateID: .hidSystemState)
-        else { return }
-        let location = CGEvent(source: nil)?.location ?? .zero
+        guard hasAccessibility, let source = hidSource else { return }
+        let location = cursorLocation
         guard let down = CGEvent(
             mouseEventSource: source,
             mouseType: .leftMouseDown,

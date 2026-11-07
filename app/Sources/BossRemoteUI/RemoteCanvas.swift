@@ -740,16 +740,16 @@ private struct TouchOverlay: View {
                     RadialGradient(
                         stops: [
                             .init(color: BossTheme.accentBright.opacity(0.50), location: 0),
-                            .init(color: BossTheme.accent.opacity(0.20), location: 0.42),
+                            .init(color: BossTheme.accent.opacity(0.30), location: 0.26),
+                            .init(color: BossTheme.accent.opacity(0.12), location: 0.55),
                             .init(color: BossTheme.accent.opacity(0), location: 1),
                         ],
                         center: .center,
                         startRadius: 0,
-                        endRadius: 34
+                        endRadius: 40
                     )
                 )
-                .frame(width: 68, height: 68)
-                .blur(radius: 6)
+                .frame(width: 80, height: 80)
                 .position(x: x, y: y)
         }
         .frame(width: padDiameter, height: padDiameter)
@@ -767,17 +767,18 @@ private struct TouchOverlay: View {
                 .fill(
                     RadialGradient(
                         stops: [
-                            .init(color: BossTheme.accent.opacity(0.26), location: 0),
-                            .init(color: BossTheme.accent.opacity(0.09), location: 0.46),
+                            .init(color: BossTheme.accent.opacity(0.30), location: 0),
+                            .init(color: BossTheme.accent.opacity(0.19), location: 0.22),
+                            .init(color: BossTheme.accent.opacity(0.08), location: 0.48),
+                            .init(color: BossTheme.accent.opacity(0.02), location: 0.74),
                             .init(color: BossTheme.accent.opacity(0), location: 1),
                         ],
                         center: .center,
                         startRadius: 0,
-                        endRadius: 32
+                        endRadius: 36
                     )
                 )
-                .frame(width: 64, height: 64)
-                .blur(radius: 5)
+                .frame(width: 72, height: 72)
 
             Circle()
                 .fill(
@@ -795,9 +796,8 @@ private struct TouchOverlay: View {
                 .frame(width: 22, height: 22)
 
             Circle()
-                .strokeBorder(BossTheme.accent.opacity(0.38), lineWidth: 1)
+                .strokeBorder(BossTheme.accent.opacity(0.34), lineWidth: 1)
                 .frame(width: 21, height: 21)
-                .blur(radius: 0.7)
 
             Circle()
                 .fill(
