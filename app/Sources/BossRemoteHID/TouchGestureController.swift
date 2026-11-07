@@ -32,8 +32,8 @@ public final class TouchGestureController {
     private let scrollStartThreshold: CGFloat = 0.22
     /// Pixels per radian at a crawl and at a fast spin. A flat rate is what
     /// made slow rotation feel dead and fast rotation feel slow.
-    private let scrollGainSlow: CGFloat = 150
-    private let scrollGainFast: CGFloat = 620
+    private let scrollGainSlow: CGFloat = 130
+    private let scrollGainFast: CGFloat = 520
     private let scrollSpeedLow: CGFloat = 0.8
     private let scrollSpeedHigh: CGFloat = 9
     /// Higher than the pointer ease: scrolling that lags behind the thumb
@@ -290,8 +290,8 @@ public final class TouchGestureController {
     /// A wheel keeps turning when you let go; without this the page stops dead
     /// against the thumb and every scroll reads as scratchy.
     private func startInertia() {
-        guard abs(scrollVelocity) > 260 else { return }
-        inertiaVelocity = min(max(scrollVelocity, -3000), 3000)
+        guard abs(scrollVelocity) > 320 else { return }
+        inertiaVelocity = min(max(scrollVelocity, -2400), 2400)
         guard inertiaTimer == nil else { return }
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now(), repeating: 1.0 / 60.0)
@@ -302,7 +302,7 @@ public final class TouchGestureController {
                 return
             }
             self.scrollTarget += self.inertiaVelocity / 60
-            self.inertiaVelocity *= 0.90
+            self.inertiaVelocity *= 0.88
             self.emitScroll(dt: 1.0 / 60.0)
         }
         timer.resume()
