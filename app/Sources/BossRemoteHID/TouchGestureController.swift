@@ -12,6 +12,8 @@ public final class TouchGestureController {
     public var onClick: (() -> Void)?
     public var onSwipe: ((SwipeDirection, Bool) -> Void)?
     public var onDoubleTap: (() -> Void)?
+    /// Fires after a double tap in the top or bottom band scrolled the page.
+    public var onJump: ((Bool) -> Void)?
     public var doubleTapAvailable: (() -> Bool)?
     public var onLog: ((String) -> Void)?
 
@@ -32,8 +34,8 @@ public final class TouchGestureController {
     private let scrollStartThreshold: CGFloat = 0.22
     /// Pixels per radian at a crawl and at a fast spin. A flat rate is what
     /// made slow rotation feel dead and fast rotation feel slow.
-    private let scrollGainSlow: CGFloat = 130
-    private let scrollGainFast: CGFloat = 520
+    private let scrollGainSlow: CGFloat = 110
+    private let scrollGainFast: CGFloat = 460
     private let scrollSpeedLow: CGFloat = 0.8
     private let scrollSpeedHigh: CGFloat = 9
     /// Higher than the pointer ease: scrolling that lags behind the thumb
@@ -80,6 +82,28 @@ public final class TouchGestureController {
     private var freezeOrigin: CGPoint?
     private var startedOnRing = false
     private var lastTapEndedAt: TimeInterval = 0
+    private var pendingTap: PendingTap?
+
+    private enum TapZone {
+        case top
+        case bottom
+    }
+
+    private enum TapAction {
+        case doubleTap
+        case jump(toTop: Bool)
+    }
+
+    private struct PendingTap {
+        var at: TimeInterval
+        var action: TapAction
+        var work: DispatchWorkItem
+    }
+
+    /// Fraction of the clickpad, measured from the top and bottom, that turns
+    /// a double tap into a jump instead of a click.
+    private let jumpBand: Double = 0.26
+    private let jumpPixels: Int32 = 24_000
 
     public init() {}
 
@@ -135,6 +159,7 @@ public final class TouchGestureController {
         peakSize = size
         pressFrozen = false
         freezeOrigin = nil
+        cancelDeferredClick()
         stopInertia()
         startLiftWatch()
         onLog?(String(
@@ -408,18 +433,81 @@ public final class TouchGestureController {
             return
         }
         if isTapEnabled, tapCandidate, !didMoveOrScroll, elapsed <= tapMaximumDuration {
-            let wantsDouble = doubleTapAvailable?() ?? false
-            if wantsDouble,
-               lastTapEndedAt > 0,
-               now - lastTapEndedAt <= doubleTapWindow {
-                lastTapEndedAt = 0
-                onDoubleTap?()
+            // A second tap within the window consumes the deferred click and
+            // runs the reserved action instead.
+            if let pending = pendingTap {
+                pendingTap = nil
+                pending.work.cancel()
+                if now - pending.at <= doubleTapWindow {
+                    lastTapEndedAt = 0
+                    switch pending.action {
+                    case .doubleTap:
+                        onDoubleTap?()
+                    case .jump(let toTop):
+                        jump(toTop: toTop)
+                    }
+                    reset()
+                    return
+                }
+            }
+
+            let zone = tapZone(startPoint)
+            let action: TapAction?
+            if doubleTapAvailable?() ?? false {
+                action = .doubleTap
+            } else if let zone, isScrollEnabled {
+                action = .jump(toTop: zone == .top)
+            } else {
+                action = nil
+            }
+
+            if let action {
+                lastTapEndedAt = now
+                // Hold the click just long enough to see whether a second tap
+                // is coming; inside the bands only, so normal clicking in the
+                // middle of the pad never waits.
+                let work = DispatchWorkItem { [weak self] in
+                    guard let self else { return }
+                    self.pendingTap = nil
+                    self.onClick?()
+                }
+                pendingTap = PendingTap(at: now, action: action, work: work)
+                DispatchQueue.main.asyncAfter(
+                    deadline: .now() + doubleTapWindow,
+                    execute: work
+                )
             } else {
                 lastTapEndedAt = now
                 onClick?()
             }
         }
         reset()
+    }
+
+    private func tapZone(_ point: CGPoint?) -> TapZone? {
+        guard let point else { return nil }
+        let y = TouchGeometry.normalize(
+            x: Double(point.x),
+            y: Double(point.y)
+        ).y
+        if y <= jumpBand { return .top }
+        if y >= 1 - jumpBand { return .bottom }
+        return nil
+    }
+
+    private func jump(toTop: Bool) {
+        stopInertia()
+        scrollTarget = 0
+        scrollSmoothed = 0
+        scrollVelocity = 0
+        onScroll?(toTop ? -jumpPixels : jumpPixels)
+        onJump?(toTop)
+    }
+
+    /// A new touch abandons the deferred click but keeps the record, so the
+    /// second tap of a double tap can still claim the action.
+    private func cancelDeferredClick() {
+        pendingTap?.work.cancel()
     }
 
     private func swipeDirection(elapsed: TimeInterval) -> SwipeDirection? {

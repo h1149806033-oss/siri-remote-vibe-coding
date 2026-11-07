@@ -116,7 +116,10 @@ public enum RemoteControl: String, CaseIterable, Codable, Identifiable, Sendable
             return L10n.t("沿外环滑动", "Slide along the outer ring")
         case .swipeUp, .swipeDown, .swipeLeft, .swipeRight:
             return L10n.t("在触控板上快速划过", "Flick across the clickpad")
-        case .tapTwo: return L10n.t("连续轻点两次", "Two quick taps")
+        case .tapTwo: return L10n.t(
+            "连续轻点两次；未映射时双击上下边缘可置顶或置底",
+            "Two quick taps; double tap the top or bottom band to jump when unmapped"
+        )
         }
     }
 

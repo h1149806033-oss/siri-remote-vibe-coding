@@ -79,12 +79,14 @@ final class AppModel: ObservableObject {
         var scopeBundleID: String?
         var doublePress: Bool
     }
-    private var logBytes = 0
     private let logQueue = DispatchQueue(
         label: "com.bossremote.runtime-log",
         qos: .utility
     )
-    private var logHandle: FileHandle?
+    private lazy var logFile = RuntimeLogFile(
+        url: logURL,
+        limit: logByteLimit
+    )
     private let logByteLimit = 2 * 1024 * 1024
     private let logURL: URL = {
         let base = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
@@ -199,6 +201,9 @@ final class AppModel: ObservableObject {
             self.runGesture(
                 self.gestureControl(for: direction, fromRing: fromRing)
             )
+        }
+        gestures.onJump = { [weak self] toTop in
+            self?.appendLog("double tap jump \(toTop ? "top" : "bottom")")
         }
         gestures.onDoubleTap = { [weak self] in
             guard let self else { return }
@@ -678,34 +683,45 @@ final class AppModel: ObservableObject {
         // Opening and closing a file handle on the main thread for every line
         // cost a frame right as a touch began. Keep one handle and write off
         // the main queue.
-        logQueue.async { [weak self] in
-            self?.writeToDisk(line)
-        }
+        let file = logFile
+        logQueue.async { file.write(line) }
+    }
+}
+
+
+/// Owns the runtime log file. Touched only from the logging queue, so it stays
+/// off the main actor and never opens a handle inline with a touch frame.
+final class RuntimeLogFile: @unchecked Sendable {
+    private let url: URL
+    private let limit: Int
+    private var handle: FileHandle?
+    private var bytes = 0
+
+    init(url: URL, limit: Int) {
+        self.url = url
+        self.limit = limit
     }
 
-    private func writeToDisk(_ line: String) {
+    func write(_ line: String) {
         let data = Data(line.utf8)
-        if logHandle == nil {
-            if !FileManager.default.fileExists(atPath: logURL.path) {
-                FileManager.default.createFile(
-                    atPath: logURL.path,
-                    contents: nil
-                )
+        if handle == nil {
+            if !FileManager.default.fileExists(atPath: url.path) {
+                FileManager.default.createFile(atPath: url.path, contents: nil)
             }
-            logHandle = try? FileHandle(forWritingTo: logURL)
-            logBytes = Int((try? logHandle?.seekToEnd()) ?? 0)
+            handle = try? FileHandle(forWritingTo: url)
+            bytes = Int((try? handle?.seekToEnd()) ?? 0)
         }
-        guard let handle = logHandle else { return }
-        if logBytes > logByteLimit {
+        guard let handle else { return }
+        if bytes > limit {
             try? handle.truncate(atOffset: 0)
-            logBytes = 0
+            bytes = 0
         }
         do {
             try handle.seekToEnd()
             try handle.write(contentsOf: data)
-            logBytes += data.count
+            bytes += data.count
         } catch {
-            logHandle = nil
+            self.handle = nil
         }
     }
 }
