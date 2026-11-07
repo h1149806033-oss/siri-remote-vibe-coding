@@ -817,3 +817,25 @@ private struct TouchOverlay: View {
         .frame(width: 68, height: 68)
     }
 }
+
+/// A cropped head of the remote artwork, for list rows and device headers.
+public struct RemoteThumbnail: View {
+    private let size: CGFloat
+    /// Design-space height to show: just past the bottom of the clickpad.
+    private let shownHeight: CGFloat = 320
+
+    public init(size: CGFloat = 44) {
+        self.size = size
+    }
+
+    public var body: some View {
+        RemoteArtwork(active: [], hovered: nil)
+            .frame(width: 251, height: 960)
+            .scaleEffect(size / shownHeight, anchor: .top)
+            .frame(width: size, height: size, alignment: .top)
+            .clipShape(
+                RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+            )
+            .accessibilityHidden(true)
+    }
+}

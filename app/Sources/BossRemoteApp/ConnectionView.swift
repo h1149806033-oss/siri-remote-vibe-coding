@@ -135,18 +135,8 @@ struct ConnectionView: View {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .stroke(BossTheme.hairline, lineWidth: 1)
                     )
-                Image(systemName: "appletvremote.gen4")
-                    .font(.system(size: 28, weight: .light))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.96, green: 0.96, blue: 0.97),
-                                Color(red: 0.62, green: 0.64, blue: 0.68),
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+                RemoteThumbnail(size: 44)
+                    .padding(.top, 2)
             }
             .frame(width: 58, height: 58)
 
