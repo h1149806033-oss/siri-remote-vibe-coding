@@ -1,0 +1,15 @@
+.DS_Store
+
+# SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+
+# Local build output
+app/dist/
+dist/
+
+# Xcode
+DerivedData/
+*.xcodeproj
+*.xcworkspace
