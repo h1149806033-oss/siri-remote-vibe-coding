@@ -42,7 +42,10 @@ public final class TouchGestureController {
     /// reads as sticky rather than smooth.
     private let scrollEase: CGFloat = 0.55
     /// Relative contact-pressure rise that counts as a press.
-    private let clickRiseRatio: CGFloat = 0.35
+    private let clickRiseRatio: CGFloat = 0.60
+    /// How far the finger may drift while a pressure rise is measured.
+    private let pressMaxTravel: CGFloat = 0.02
+    private let pressWindow: TimeInterval = 0.12
     /// Finger travel that cancels a press-freeze so the cursor never sticks.
     private let pressMoveMax: CGFloat = 0.025
     private let swipeMinimumDistance: CGFloat = 0.12
@@ -76,13 +79,16 @@ public final class TouchGestureController {
     private var inertiaVelocity: CGFloat = 0
     private var inertiaTimer: DispatchSourceTimer?
 
-    private var baselineSize: CGFloat = 0
-    private var baselineFrames = 0
-    private var peakSize: CGFloat = 0
+    private struct PressSample {
+        var time: TimeInterval
+        var size: CGFloat
+        var point: CGPoint
+    }
+
+    private var pressSamples: [PressSample] = []
     private var pressFrozen = false
     private var freezeOrigin: CGPoint?
     private var startedOnRing = false
-    private var lastTapEndedAt: TimeInterval = 0
     private var pendingTap: PendingTap?
 
     private enum TapZone {
@@ -156,9 +162,7 @@ public final class TouchGestureController {
         scrollSmoothed = 0
         scrollVelocity = 0
         angularSpeed = 0
-        baselineSize = size
-        baselineFrames = 0
-        peakSize = size
+        pressSamples.removeAll(keepingCapacity: true)
         pressFrozen = false
         freezeOrigin = nil
         cancelDeferredClick()
@@ -185,7 +189,7 @@ public final class TouchGestureController {
             ? clamp(now - lastFrameAt, 1.0 / 240, 1.0 / 30)
             : 1.0 / 60
 
-        updatePressFreeze(size: size, point: point)
+        updatePressFreeze(size: size, point: point, now: now)
 
         let radius = TouchGeometry.radius(
             x: Double(point.x),
@@ -372,15 +376,23 @@ public final class TouchGestureController {
         inertiaVelocity = 0
     }
 
-    /// A press raises contact pressure without moving the finger; freezing the
-    /// pointer there keeps a click from drifting. Any real travel releases it.
-    private func updatePressFreeze(size: CGFloat, point: CGPoint) {
-        peakSize = max(peakSize, size)
-        if baselineFrames < 3 {
-            baselineSize = max(baselineSize, size)
-            baselineFrames += 1
-            return
+    /// A press raises contact pressure while the finger stays put. Contact
+    /// size also grows as the finger moves towards the middle of the pad, so
+    /// the rise is only accepted together with near-zero travel — otherwise a
+    /// drag towards the centre froze the pointer mid-motion.
+    private func updatePressFreeze(
+        size: CGFloat,
+        point: CGPoint,
+        now: TimeInterval
+    ) {
+        pressSamples.append(
+            PressSample(time: now, size: size, point: point)
+        )
+        while let first = pressSamples.first,
+              now - first.time > pressWindow {
+            pressSamples.removeFirst()
         }
+
         if pressFrozen {
             guard let origin = freezeOrigin else {
                 pressFrozen = false
@@ -392,16 +404,25 @@ public final class TouchGestureController {
             }
             return
         }
-        guard pressFreezeEnabled else { return }
-        let base = max(baselineSize, 0.02)
-        guard peakSize > baselineSize else { return }
-        if (peakSize - baselineSize) / base >= clickRiseRatio {
-            pressFrozen = true
-            freezeOrigin = point
-            onLog?(
-                "press freeze base=\(String(format: "%.3f", baselineSize)) peak=\(String(format: "%.3f", peakSize))"
-            )
-        }
+        guard pressFreezeEnabled,
+              pressSamples.count >= 3,
+              let oldest = pressSamples.first
+        else { return }
+        let travel = hypot(
+            point.x - oldest.point.x,
+            point.y - oldest.point.y
+        )
+        guard travel <= pressMaxTravel else { return }
+        let rise = (size - oldest.size) / max(oldest.size, 0.02)
+        guard rise >= clickRiseRatio else { return }
+        pressFrozen = true
+        freezeOrigin = point
+        onLog?(String(
+            format: "press freeze base=%.3f now=%.3f travel=%.3f",
+            oldest.size,
+            size,
+            travel
+        ))
     }
 
     private func updateVelocity(distance: CGFloat, at now: TimeInterval) -> CGFloat {
@@ -471,7 +492,6 @@ public final class TouchGestureController {
                 pendingTap = nil
                 pending.work.cancel()
                 if now - pending.at <= doubleTapWindow {
-                    lastTapEndedAt = 0
                     switch pending.action {
                     case .doubleTap:
                         onDoubleTap?()
@@ -494,7 +514,6 @@ public final class TouchGestureController {
             }
 
             if let action {
-                lastTapEndedAt = now
                 // Hold the click just long enough to see whether a second tap
                 // is coming; inside the bands only, so normal clicking in the
                 // middle of the pad never waits.
@@ -509,7 +528,6 @@ public final class TouchGestureController {
                     execute: work
                 )
             } else {
-                lastTapEndedAt = now
                 onClick?()
             }
         }
@@ -533,6 +551,9 @@ public final class TouchGestureController {
         scrollSmoothed = 0
         scrollVelocity = 0
         onScroll?(toTop ? -jumpPixels : jumpPixels)
+        // Some views clamp how far a single event may move; a second, smaller
+        // event makes sure the end of the document is reached.
+        onScroll?(toTop ? -jumpPixels / 4 : jumpPixels / 4)
         onJump?(toTop)
     }
 
@@ -558,7 +579,9 @@ public final class TouchGestureController {
         if abs(dx) >= abs(dy) {
             return dx > 0 ? .right : .left
         }
-        return dy > 0 ? .down : .up
+        // Raw y grows towards the top of the remote, so a positive delta is
+        // an upward flick.
+        return dy > 0 ? .up : .down
     }
 
     /// Some remotes stop sending frames without a final empty one. A single
@@ -627,8 +650,7 @@ public final class TouchGestureController {
         scrollVelocity = 0
         pressFrozen = false
         freezeOrigin = nil
-        baselineFrames = 0
-        peakSize = 0
+        pressSamples.removeAll(keepingCapacity: true)
         stopLiftWatch()
     }
 }

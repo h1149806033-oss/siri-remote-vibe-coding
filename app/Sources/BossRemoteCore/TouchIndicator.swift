@@ -73,12 +73,16 @@ public final class TouchIndicatorModel: ObservableObject {
     public func update(x: Double, y: Double) {
         let now = ProcessInfo.processInfo.systemUptime
         let calibrated = TouchGeometry.normalize(x: x, y: y)
-        let radius = (calibrated.x - 0.5) * (calibrated.x - 0.5)
-            + (calibrated.y - 0.5) * (calibrated.y - 0.5)
+        let radius = TouchGeometry.radius(x: x, y: y)
+        // Match the gesture's hysteresis so the rim glow does not blink out
+        // while a scroll is still running.
+        let threshold = point?.onRing == true
+            ? TouchGeometry.ringExitRadius
+            : TouchGeometry.ringRadius
         let next = Point(
             x: calibrated.x,
             y: calibrated.y,
-            onRing: radius.squareRoot() >= TouchGeometry.ringRadius
+            onRing: radius >= threshold
         )
         if point == nil
             || now - lastPublish >= minimumInterval
