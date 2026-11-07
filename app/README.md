@@ -15,6 +15,13 @@
 
 只提供 Apple Silicon 版本，需要 macOS 14 或更高。
 
+<p align="center">
+  <img src="../app-mapping.png" alt="按键映射：左边是可交互的遥控器，右边是每个按键当前发送的动作" width="100%">
+</p>
+<p align="center">
+  <img src="../app-settings.png" alt="设置：启动与权限、语音、输入手感、外观与映射数据" width="100%">
+</p>
+
 ## 功能
 
 **触控**

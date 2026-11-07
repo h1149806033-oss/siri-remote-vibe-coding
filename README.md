@@ -24,6 +24,13 @@
 - 按住 Siri 键说话，遥控器麦克风经本地桥接进系统输入设备
 - 电量与充电曲线、连接诊断、使用记录、近 7 天语音统计，日间 / 夜间主题
 
+<p align="center">
+  <img src="assets/app-mapping.png" alt="按键映射：左边是可交互的遥控器，右边是每个按键当前发送的动作" width="100%">
+</p>
+<p align="center">
+  <img src="assets/app-settings.png" alt="设置：启动与权限、语音、输入手感、外观与映射数据" width="100%">
+</p>
+
 下面保留最初的 HyperVibe + 豆包方案，两条路都能用。
 
 ---
