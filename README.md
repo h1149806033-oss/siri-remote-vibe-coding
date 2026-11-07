@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/app-icon.png" alt="Boss Remote 应用图标" width="120">
+</p>
+
 # 老板遥控boss-remote：坐着就能 Vibe Coding
 
 > Siri Remote as a Mac Trackpad + Voice Remote
