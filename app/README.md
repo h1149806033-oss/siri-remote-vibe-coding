@@ -4,6 +4,17 @@
 
 一个原生 SwiftUI App，不依赖第三方映射工具：触控板读取、按键映射、语音桥接、映射界面全部自己实现。
 
+## 下载
+
+从 [Releases](https://github.com/h1149806033-oss/siri-remote-vibe-coding/releases) 下载 `Boss-Remote-<版本>-arm64.dmg`，打开后把 `Boss Remote.app` 拖进「应用程序」。
+
+这个包用 Apple Development 证书签名、**没有经过 Apple 公证**，首次打开会被系统拦下，任选一种方式放行：
+
+- 右键点 App →「打开」→ 再确认一次
+- 或执行 `xattr -dr com.apple.quarantine "/Applications/Boss Remote.app"`
+
+只提供 Apple Silicon 版本，需要 macOS 14 或更高。
+
 ## 功能
 
 **触控**
