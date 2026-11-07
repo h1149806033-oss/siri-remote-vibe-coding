@@ -72,6 +72,7 @@ public final class TouchGestureController {
     private var scrollTarget: CGFloat = 0
     private var scrollSmoothed: CGFloat = 0
     private var scrollVelocity: CGFloat = 0
+    private var angularSpeed: CGFloat = 0
     private var inertiaVelocity: CGFloat = 0
     private var inertiaTimer: DispatchSourceTimer?
 
@@ -154,6 +155,7 @@ public final class TouchGestureController {
         scrollTarget = 0
         scrollSmoothed = 0
         scrollVelocity = 0
+        angularSpeed = 0
         baselineSize = size
         baselineFrames = 0
         peakSize = size
@@ -185,16 +187,22 @@ public final class TouchGestureController {
 
         updatePressFreeze(size: size, point: point)
 
-        let onRing = TouchGeometry.isOnRing(
+        let radius = TouchGeometry.radius(
             x: Double(point.x),
             y: Double(point.y)
         )
+        // Hysteresis: entering needs the ring, staying only needs to avoid the
+        // middle, so a circling thumb does not drop out of scroll mode.
+        let onRing = isCircular
+            ? radius >= TouchGeometry.ringExitRadius
+            : radius >= TouchGeometry.ringRadius
         if onRing != isCircular {
             isCircular = onRing
             lastAngle = atan2(point.y - 0.5, point.x - 0.5)
             scrollStarted = false
             scrollArmed = 0
             scrollVelocity = 0
+            angularSpeed = 0
             scrollTarget = 0
             scrollSmoothed = 0
             return
@@ -254,7 +262,19 @@ public final class TouchGestureController {
     }
 
     private func updateCircular(point: CGPoint, dt: CGFloat) {
-        let angle = atan2(point.y - 0.5, point.x - 0.5)
+        // Rotate about the pad's measured centre with both axes normalised.
+        // The raw sensor frame is offset by (0.015, 0.042) and its axes differ
+        // in scale by 4%, which made the angular rate pulse once per turn.
+        // The y sign is kept in sensor orientation so the scroll direction
+        // stays as it is.
+        let calibrated = TouchGeometry.normalize(
+            x: Double(point.x),
+            y: Double(point.y)
+        )
+        let angle = atan2(
+            CGFloat(0.5 - calibrated.y),
+            CGFloat(calibrated.x - 0.5)
+        )
         guard let lastAngle else {
             self.lastAngle = angle
             return
@@ -270,13 +290,22 @@ public final class TouchGestureController {
         guard isScrollEnabled else { return }
 
         let step = max(dt, 1.0 / 120)
-        // Speed comes from this frame only: the armed rotation below is a
-        // backlog, and treating it as one frame of motion would spike the gain.
-        let speed = abs(delta) / step
+        let frameDelta = delta
+        let frameSpeed = abs(frameDelta) / step
+        // Gain follows a smoothed angular rate. Per-frame speed swings with
+        // sensor frame jitter, and driving the curve with it made the scroll
+        // accelerate and brake on its own.
+        angularSpeed = angularSpeed == 0
+            ? frameSpeed
+            : angularSpeed * 0.72 + frameSpeed * 0.28
+        let gain = scrollGain(for: angularSpeed)
 
         if !scrollStarted {
-            scrollArmed += delta
-            guard abs(scrollArmed) >= scrollStartThreshold else { return }
+            scrollArmed += frameDelta
+            guard abs(scrollArmed) >= scrollStartThreshold else {
+                scrollVelocity *= 0.8
+                return
+            }
             // Spend the rotation that armed the gesture instead of dropping it,
             // otherwise every ring gesture starts with a dead 20 degrees.
             delta = scrollArmed
@@ -284,9 +313,12 @@ public final class TouchGestureController {
             scrollStarted = true
         }
 
-        let pixels = -delta * scrollGain(for: speed) * scrollSpeed
+        let pixels = -delta * gain * scrollSpeed
         scrollTarget += pixels
-        scrollVelocity = scrollVelocity * 0.7 + (pixels / step) * 0.3
+        // The tail is fed by this frame's motion only; the armed backlog would
+        // otherwise kick the inertia to a speed the hand never reached.
+        scrollVelocity = scrollVelocity * 0.7
+            + (-frameDelta * gain * scrollSpeed / step) * 0.3
         emitScroll(dt: dt)
     }
 

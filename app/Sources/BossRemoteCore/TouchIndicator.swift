@@ -15,9 +15,12 @@ public enum TouchGeometry {
 
     /// Distance from the centre, in calibrated units, where the outer ring
     /// begins. Calibrated coordinates span the pad's bounding square, so the
-    /// rim itself sits at 0.5; the raw threshold of 0.34 was about 81% of the
-    /// physical radius.
-    public static let ringRadius: Double = 0.41
+    /// rim itself sits at 0.5.
+    public static let ringRadius: Double = 0.40
+    /// Once a gesture is scrolling, it keeps scrolling until the finger comes
+    /// this far in. Without the gap, a thumb circling the ring drifts inside
+    /// the radius and the gesture flips to pointer control mid-turn.
+    public static let ringExitRadius: Double = 0.28
 
     public static func normalize(
         x: Double,
@@ -29,11 +32,15 @@ public enum TouchGeometry {
         )
     }
 
-    public static func isOnRing(x: Double, y: Double) -> Bool {
+    public static func radius(x: Double, y: Double) -> Double {
         let point = normalize(x: x, y: y)
         let dx = point.x - 0.5
         let dy = point.y - 0.5
-        return (dx * dx + dy * dy).squareRoot() >= ringRadius
+        return (dx * dx + dy * dy).squareRoot()
+    }
+
+    public static func isOnRing(x: Double, y: Double) -> Bool {
+        radius(x: x, y: y) >= ringRadius
     }
 }
 
