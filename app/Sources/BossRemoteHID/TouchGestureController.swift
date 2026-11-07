@@ -27,13 +27,18 @@ public final class TouchGestureController {
     private let velocityWindow: TimeInterval = 0.06
     private let tapMaximumDuration: TimeInterval = 0.24
     private let tapMaximumDistance: CGFloat = 0.03
-    private let scrollPixelsPerRadian: CGFloat = 90
     /// Rotation that must accumulate before the ring starts scrolling, so a
     /// touch that lands on the outer ring never jumps the page.
-    private let scrollStartThreshold: CGFloat = 0.35
-    /// Counter-rotation smaller than this is treated as finger jitter.
-    private let scrollReversalWindow: CGFloat = 0.10
-    private let scrollEase: CGFloat = 0.35
+    private let scrollStartThreshold: CGFloat = 0.22
+    /// Pixels per radian at a crawl and at a fast spin. A flat rate is what
+    /// made slow rotation feel dead and fast rotation feel slow.
+    private let scrollGainSlow: CGFloat = 150
+    private let scrollGainFast: CGFloat = 620
+    private let scrollSpeedLow: CGFloat = 0.8
+    private let scrollSpeedHigh: CGFloat = 9
+    /// Higher than the pointer ease: scrolling that lags behind the thumb
+    /// reads as sticky rather than smooth.
+    private let scrollEase: CGFloat = 0.55
     /// Relative contact-pressure rise that counts as a press.
     private let clickRiseRatio: CGFloat = 0.35
     /// Finger travel that cancels a press-freeze so the cursor never sticks.
@@ -61,11 +66,12 @@ public final class TouchGestureController {
     private var residualX: CGFloat = 0
     private var residualY: CGFloat = 0
     private var scrollStarted = false
-    private var scrollAccumulated: CGFloat = 0
-    private var scrollDirection: CGFloat = 0
-    private var scrollReversal: CGFloat = 0
+    private var scrollArmed: CGFloat = 0
     private var scrollTarget: CGFloat = 0
     private var scrollSmoothed: CGFloat = 0
+    private var scrollVelocity: CGFloat = 0
+    private var inertiaVelocity: CGFloat = 0
+    private var inertiaTimer: DispatchSourceTimer?
 
     private var baselineSize: CGFloat = 0
     private var baselineFrames = 0
@@ -120,16 +126,16 @@ public final class TouchGestureController {
         residualX = 0
         residualY = 0
         scrollStarted = false
-        scrollAccumulated = 0
-        scrollDirection = 0
-        scrollReversal = 0
+        scrollArmed = 0
         scrollTarget = 0
         scrollSmoothed = 0
+        scrollVelocity = 0
         baselineSize = size
         baselineFrames = 0
         peakSize = size
         pressFrozen = false
         freezeOrigin = nil
+        stopInertia()
         startLiftWatch()
         onLog?(String(
             format: "touch start x=%.3f y=%.3f r=%.3f size=%.3f",
@@ -162,9 +168,8 @@ public final class TouchGestureController {
             isCircular = onRing
             lastAngle = atan2(point.y - 0.5, point.x - 0.5)
             scrollStarted = false
-            scrollAccumulated = 0
-            scrollDirection = 0
-            scrollReversal = 0
+            scrollArmed = 0
+            scrollVelocity = 0
             scrollTarget = 0
             scrollSmoothed = 0
             return
@@ -233,31 +238,45 @@ public final class TouchGestureController {
         var delta = angle - lastAngle
         if delta > .pi { delta -= 2 * .pi }
         if delta < -.pi { delta += 2 * .pi }
-        guard abs(delta) < .pi / 2 else { return }
+        guard abs(delta) < .pi else { return }
+
         tapCandidate = false
         didMoveOrScroll = true
         guard isScrollEnabled else { return }
 
+        let step = max(dt, 1.0 / 120)
+        // Speed comes from this frame only: the armed rotation below is a
+        // backlog, and treating it as one frame of motion would spike the gain.
+        let speed = abs(delta) / step
+
         if !scrollStarted {
-            scrollAccumulated += abs(delta)
-            guard scrollAccumulated >= scrollStartThreshold else { return }
+            scrollArmed += delta
+            guard abs(scrollArmed) >= scrollStartThreshold else { return }
+            // Spend the rotation that armed the gesture instead of dropping it,
+            // otherwise every ring gesture starts with a dead 20 degrees.
+            delta = scrollArmed
+            scrollArmed = 0
             scrollStarted = true
-            scrollAccumulated = 0
         }
 
-        if scrollDirection != 0, delta * scrollDirection < 0 {
-            scrollReversal += abs(delta)
-            guard scrollReversal >= scrollReversalWindow else { return }
-            scrollDirection = delta > 0 ? 1 : -1
-            scrollReversal = 0
-            return
-        }
-        scrollReversal = 0
-        scrollDirection = delta > 0 ? 1 : -1
+        let pixels = -delta * scrollGain(for: speed) * scrollSpeed
+        scrollTarget += pixels
+        scrollVelocity = scrollVelocity * 0.7 + (pixels / step) * 0.3
+        emitScroll(dt: dt)
+    }
 
-        scrollTarget += -delta * scrollPixelsPerRadian * scrollSpeed
-        // Normalise the ease to 60 Hz so an irregular frame rate cannot
-        // change how the scroll feels.
+    /// Crawling around the ring stays precise, a quick spin covers a page.
+    private func scrollGain(for speed: CGFloat) -> CGFloat {
+        let t = min(
+            max((speed - scrollSpeedLow) / (scrollSpeedHigh - scrollSpeedLow), 0),
+            1
+        )
+        let smooth = t * t * (3 - 2 * t)
+        return scrollGainSlow + (scrollGainFast - scrollGainSlow) * smooth
+    }
+
+    private func emitScroll(dt: CGFloat) {
+        // Normalised to 60 Hz so an irregular frame rate cannot change the feel.
         let eased = 1 - pow(1 - Double(scrollEase), Double(dt) * 60)
         scrollSmoothed += (scrollTarget - scrollSmoothed)
             * CGFloat(min(1, max(0.05, eased)))
@@ -266,6 +285,34 @@ public final class TouchGestureController {
         scrollSmoothed -= whole
         scrollTarget -= whole
         onScroll?(Int32(whole))
+    }
+
+    /// A wheel keeps turning when you let go; without this the page stops dead
+    /// against the thumb and every scroll reads as scratchy.
+    private func startInertia() {
+        guard abs(scrollVelocity) > 260 else { return }
+        inertiaVelocity = min(max(scrollVelocity, -3000), 3000)
+        guard inertiaTimer == nil else { return }
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now(), repeating: 1.0 / 60.0)
+        timer.setEventHandler { [weak self] in
+            guard let self else { return }
+            if abs(self.inertiaVelocity) < 45 {
+                self.stopInertia()
+                return
+            }
+            self.scrollTarget += self.inertiaVelocity / 60
+            self.inertiaVelocity *= 0.90
+            self.emitScroll(dt: 1.0 / 60.0)
+        }
+        timer.resume()
+        inertiaTimer = timer
+    }
+
+    private func stopInertia() {
+        inertiaTimer?.cancel()
+        inertiaTimer = nil
+        inertiaVelocity = 0
     }
 
     /// A press raises contact pressure without moving the finger; freezing the
@@ -354,6 +401,7 @@ public final class TouchGestureController {
     private func finishIfNeeded(at now: TimeInterval) {
         guard isTouching else { return }
         let elapsed = now - startedAt
+        if scrollStarted { startInertia() }
         if let direction = swipeDirection(elapsed: elapsed) {
             onSwipe?(direction, startedOnRing)
             reset()
@@ -453,11 +501,10 @@ public final class TouchGestureController {
         residualX = 0
         residualY = 0
         scrollStarted = false
-        scrollAccumulated = 0
-        scrollDirection = 0
-        scrollReversal = 0
+        scrollArmed = 0
         scrollTarget = 0
         scrollSmoothed = 0
+        scrollVelocity = 0
         pressFrozen = false
         freezeOrigin = nil
         baselineFrames = 0
