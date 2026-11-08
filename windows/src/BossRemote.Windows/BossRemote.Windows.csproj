@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <EnableWindowsTargeting Condition="$([MSBuild]::IsOSPlatform('Windows')) == false">true</EnableWindowsTargeting>
+    <RootNamespace>BossRemote.Windows</RootNamespace>
+    <AssemblyName>BossRemote</AssemblyName>
+    <Product>老板遥控 Windows</Product>
+    <Version>0.1.0</Version>
+    <Description>Windows host for an Apple Siri Remote A2854. Hardware behavior is unverified.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BossRemote.Core\BossRemote.Core.csproj" />
+  </ItemGroup>
+</Project>

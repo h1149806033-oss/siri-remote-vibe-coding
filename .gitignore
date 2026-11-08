@@ -13,3 +13,8 @@ dist/
 DerivedData/
 *.xcodeproj
 *.xcworkspace
+
+# .NET
+**/bin/
+**/obj/
+windows/artifacts/

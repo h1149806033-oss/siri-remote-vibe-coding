@@ -1,0 +1,40 @@
+name: windows
+
+on:
+  push:
+    paths:
+      - "windows/**"
+      - ".github/workflows/windows.yml"
+  pull_request:
+    paths:
+      - "windows/**"
+      - ".github/workflows/windows.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Unit tests
+        run: dotnet test windows/tests/BossRemote.Core.Tests/BossRemote.Core.Tests.csproj -c Release --nologo
+      - name: Compile the Windows host
+        run: dotnet build windows/src/BossRemote.Windows/BossRemote.Windows.csproj -c Release --nologo
+
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Test and compile
+        run: dotnet test windows/BossRemote.sln -c Release --nologo
+      - name: Self-contained win-x64 publish
+        run: dotnet publish windows/src/BossRemote.Windows/BossRemote.Windows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts/win-x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BossRemote-Windows-win-x64
+          path: artifacts/win-x64
