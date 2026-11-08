@@ -88,6 +88,7 @@ The step-by-step setup guide below is currently in Chinese; this English section
 | `vendor/HyperVibe-0.2.0-beta.9-macOS-arm64.zip` | 上游官方 App-only 包，约 4.2 MB |
 | `vendor/HyperVibe-Full-Setup-0.2.0-beta.9-arm64.pkg` | 上游官方 Full Setup 包，约 4.7 MB，含麦克风驱动与守护进程 |
 | `vendor/SHA256SUMS.txt` | 上述两个包的 SHA256 |
+| `windows/` | Windows 端口。逻辑和 WinForms 宿主已实现，遥控器真机未验证；说明见 [windows/README.md](windows/README.md) |
 
 两个二进制包都是上游官方 Release 的原样转载，未做修改。校验方法见「安装 HyperVibe + Full Setup」。HyperVibe 以 GPLv3 发布，许可证随包附带；源码与新版见[上游 Release](https://github.com/HOLODATA-COM/SiriRemoteForge/releases/tag/v0.2.0-beta.9)。
 
@@ -112,9 +113,10 @@ The step-by-step setup guide below is currently in Chinese; this English section
 ## 平台支持
 
 - **macOS**：本方案完整验证。Apple Silicon + macOS 27.0.1；Siri Remote 作为标准蓝牙 HID 设备连接，HyperVibe 处理触控板和按键，Full Setup 暴露麦克风。macOS 上这套链路是原生适配的。
-- **Windows**：尚未验证。蓝牙 HID 和麦克风大概率能工作，但触控板/手势需要单独做驱动或映射（HyperVibe 是 macOS 应用）。等跑通后会补充说明。
+- **Windows**：有独立端口，代码在 [`windows/`](windows/README.md)。它读取 A2854 的 HID/GATT 报告，再注入指针和按键；不包含 macOS 的 PacketLogger / CoreAudio 语音桥。截止目前没有在 Windows 和遥控器上实测，语音虚拟麦克风未实现。安装、覆盖矩阵和验收清单见 [windows/README.md](windows/README.md)。
+- **云端转发**：Mac 上的老板遥控可以把已经收到的按键和触控发到 Linux 接收端。接收端只听 `127.0.0.1`，跨网要自己做 SSH 隧道。说明见 [windows/RELAY.md](windows/RELAY.md)。
 
-macOS is fully tested. Windows is untested: Bluetooth HID and the microphone should mostly work, but the touch surface will need separate mapping. I'll update this once it's verified.
+macOS is fully tested. The Windows port lives in `windows/` and is not hardware-verified; it does not include the macOS microphone bridge.
 
 ---
 

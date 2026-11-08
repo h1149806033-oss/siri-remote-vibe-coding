@@ -107,6 +107,7 @@ struct SettingsView: View {
                     aboutCard
                     appearanceSection
                     inputCard
+                    relayCard
                     dataCard
                 }
             } else {
@@ -119,6 +120,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 30) {
                         appearanceSection
                         inputCard
+                        relayCard
                         dataCard
                     }
                 }
@@ -259,6 +261,23 @@ struct SettingsView: View {
                     open: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent"
                 )
             }
+        }
+    }
+
+    private var relayCard: some View {
+        SettingsCard(
+            title: L10n.t("云端转发", "Cloud relay"),
+            symbol: "arrow.left.arrow.right",
+            subtitle: L10n.t("默认关闭，只发遥控器事件", "Off by default; remote events only")
+        ) {
+            SettingsToggleRow(
+                title: L10n.t("转发到本机回环", "Forward to loopback"),
+                subtitle: L10n.t(
+                    "把真实按键和触控发到 127.0.0.1。跨网请自己用 SSH 隧道。不转发麦克风，也不监听公网。",
+                    "Sends real buttons and touch to 127.0.0.1. Use your own SSH tunnel off-box. No microphone and no public listener."
+                ),
+                isOn: relayBinding
+            )
         }
     }
 
@@ -587,6 +606,13 @@ struct SettingsView: View {
         Binding(
             get: { settings.scrollSpeed },
             set: { settings.scrollSpeed = $0; model.applySettings() }
+        )
+    }
+
+    private var relayBinding: Binding<Bool> {
+        Binding(
+            get: { settings.relayEnabled },
+            set: { settings.relayEnabled = $0; model.refreshRelay() }
         )
     }
 

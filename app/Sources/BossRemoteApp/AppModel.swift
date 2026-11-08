@@ -62,6 +62,7 @@ final class AppModel: ObservableObject {
     private var terminateObserver: NSObjectProtocol?
     private var started = false
     private var stopped = false
+    private var relay: RelayClient?
     private var voiceRestartID = 0
     private var lastTouchContactCount = 0
     private var hidBatteryLevel: Int?
@@ -235,6 +236,7 @@ final class AppModel: ObservableObject {
                 self.touchIndicator.update(x: x, y: y)
             }
             self.gestures.handle(contacts: contacts)
+            self.relay?.sendTouch(contacts)
         }
         touch.onLog = { [weak self] message in
             self?.appendLog(message)
@@ -402,6 +404,7 @@ final class AppModel: ObservableObject {
         voice.prepare()
         refreshPermissions()
         applySettings()
+        refreshRelay()
     }
 
     func stop() {
@@ -419,6 +422,24 @@ final class AppModel: ObservableObject {
         hid.stop()
         touch.stop()
         voice.shutdownForTermination()
+        relay?.stop()
+        relay = nil
+    }
+
+    func refreshRelay() {
+        let enabled = settings.relayEnabled
+            || ProcessInfo.processInfo.environment["BOSS_REMOTE_RELAY"] == "1"
+        if enabled {
+            guard relay == nil else { return }
+            relay = RelayClient.makeIfConfigured(settingsEnabled: true) { [weak self] message in
+                DispatchQueue.main.async {
+                    self?.appendLog(message)
+                }
+            }
+            return
+        }
+        relay?.stop()
+        relay = nil
     }
 
     func refreshPermissions() {
@@ -499,6 +520,9 @@ final class AppModel: ObservableObject {
 
     private func handle(control: RemoteControl, down: Bool) {
         appendLog("button \(control.rawValue) \(down ? "down" : "up")")
+        if !control.isGesture {
+            relay?.sendButton(control, down: down)
+        }
         var isDoublePress = false
         if down {
             batteryInsights.markActivity()
