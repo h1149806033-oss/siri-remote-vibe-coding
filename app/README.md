@@ -100,6 +100,10 @@ app/
 └── scripts/                  构建、安装/卸载辅助工具
 ```
 
+## 转发到 Linux 云端
+
+设置里的「转发到本机回环」默认关闭。打开后，只把遥控器实体键和触控板接触点发到 `127.0.0.1`。token 从环境变量 `BOSS_REMOTE_RELAY_TOKEN_FILE` 读取。跨网隧道要自己用 SSH 建立。接收端和步骤见 [windows/RELAY.md](../windows/RELAY.md)。这条链路不转发麦克风。
+
 ## 已知限制
 
 - 使用私有框架 `MultitouchSupport` 读取触控板，无法上架 Mac App Store

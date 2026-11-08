@@ -114,6 +114,7 @@ The step-by-step setup guide below is currently in Chinese; this English section
 
 - **macOS**：本方案完整验证。Apple Silicon + macOS 27.0.1；Siri Remote 作为标准蓝牙 HID 设备连接，HyperVibe 处理触控板和按键，Full Setup 暴露麦克风。macOS 上这套链路是原生适配的。
 - **Windows**：有独立端口，代码在 [`windows/`](windows/README.md)。它读取 A2854 的 HID/GATT 报告，再注入指针和按键；不包含 macOS 的 PacketLogger / CoreAudio 语音桥。截止目前没有在 Windows 和遥控器上实测，语音虚拟麦克风未实现。安装、覆盖矩阵和验收清单见 [windows/README.md](windows/README.md)。
+- **云端转发**：Mac 上的老板遥控可以把已经收到的按键和触控发到 Linux 接收端。接收端只听 `127.0.0.1`，跨网要自己做 SSH 隧道。说明见 [windows/RELAY.md](windows/RELAY.md)。
 
 macOS is fully tested. The Windows port lives in `windows/` and is not hardware-verified; it does not include the macOS microphone bridge.
 

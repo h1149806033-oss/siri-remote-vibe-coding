@@ -17,6 +17,7 @@ internal sealed class MainForm : Form
     private readonly InputPipeline pipeline;
     private readonly HidSession hid = new();
     private readonly GattBridge gatt = new();
+    private readonly RemoteRelay relay = new();
     private readonly Dictionary<string, HidReportLayout?> layouts = [];
     private readonly Dictionary<string, int> loggedReports = [];
     private readonly SendInputSink sink = new();
@@ -119,6 +120,10 @@ internal sealed class MainForm : Form
 
             hid.Start();
             _ = ProbeGattAsync();
+            if (settings.RelayEnabled)
+            {
+                _ = relay.StartAsync(AppendLog);
+            }
         };
     }
 
@@ -218,6 +223,18 @@ internal sealed class MainForm : Form
             _ = ProbeGattAsync();
         }));
         panel.Controls.Add(Check("记录按键", settings.HistoryEnabled, value => settings.HistoryEnabled = value));
+        panel.Controls.Add(Check("转发遥控器事件到 127.0.0.1（需 token 文件和你自己的 SSH 隧道）", settings.RelayEnabled, value =>
+        {
+            settings.RelayEnabled = value;
+            if (value)
+            {
+                _ = relay.StartAsync(AppendLog);
+            }
+            else
+            {
+                _ = relay.StopAsync();
+            }
+        }));
         panel.Controls.Add(Check("开机启动", settings.LaunchAtLogin, value =>
         {
             settings.LaunchAtLogin = value;
@@ -298,6 +315,7 @@ internal sealed class MainForm : Form
         }
 
         pipeline.Apply(remoteEvent, Now());
+        relay.Forward(remoteEvent);
         if (remoteEvent is ButtonChanged { Down: true })
         {
             RefreshHistory();
@@ -607,6 +625,7 @@ internal sealed class MainForm : Form
 
         SaveConfig();
         clock.Stop();
+        _ = relay.StopAsync();
         hid.Dispose();
         _ = gatt.DisposeAsync();
         tray.Visible = false;

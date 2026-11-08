@@ -58,6 +58,7 @@ let package = Package(
             ],
             linkerSettings: [
                 .linkedFramework("CoreBluetooth"),
+                .linkedFramework("Network"),
             ]
         ),
     ],

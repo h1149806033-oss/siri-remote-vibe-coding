@@ -22,6 +22,12 @@ jobs:
         run: dotnet test windows/tests/BossRemote.Core.Tests/BossRemote.Core.Tests.csproj -c Release --nologo
       - name: Compile the Windows host
         run: dotnet build windows/src/BossRemote.Windows/BossRemote.Windows.csproj -c Release --nologo
+      - name: Publish the headless Linux receiver
+        run: dotnet publish windows/src/BossRemote.Relay.Server/BossRemote.Relay.Server.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts/relay-linux-x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BossRemote-Relay-linux-x64
+          path: artifacts/relay-linux-x64
 
   package:
     runs-on: windows-latest

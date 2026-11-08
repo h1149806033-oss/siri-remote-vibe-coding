@@ -18,6 +18,7 @@ public sealed class AppSettings
     public double PointerSpeed { get; set; } = 1;
     public double ScrollSpeed { get; set; } = 1;
     public bool HistoryEnabled { get; set; } = true;
+    public bool RelayEnabled { get; set; }
     public string Appearance { get; set; } = "dark";
     public bool GattSupplement { get; set; } = true;
 
@@ -440,6 +441,7 @@ public static class ConfigFile
         public double PointerSpeed { get; set; } = 1;
         public double ScrollSpeed { get; set; } = 1;
         public bool HistoryEnabled { get; set; } = true;
+        public bool RelayEnabled { get; set; }
         public string Appearance { get; set; } = "dark";
         public bool GattSupplement { get; set; } = true;
 
@@ -458,6 +460,7 @@ public static class ConfigFile
             PointerSpeed = settings.PointerSpeed,
             ScrollSpeed = settings.ScrollSpeed,
             HistoryEnabled = settings.HistoryEnabled,
+            RelayEnabled = settings.RelayEnabled,
             Appearance = settings.Appearance,
             GattSupplement = settings.GattSupplement,
         };
@@ -477,6 +480,7 @@ public static class ConfigFile
             PointerSpeed = PointerSpeed,
             ScrollSpeed = ScrollSpeed,
             HistoryEnabled = HistoryEnabled,
+            RelayEnabled = RelayEnabled,
             Appearance = Appearance,
             GattSupplement = GattSupplement,
         };

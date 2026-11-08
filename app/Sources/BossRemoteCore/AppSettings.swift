@@ -13,6 +13,7 @@ public final class AppSettings: ObservableObject {
         static let scrollSpeed = "bossRemote.settings.scrollSpeed"
         static let historyEnabled = "bossRemote.settings.historyEnabled"
         static let appearance = "bossRemote.settings.appearance"
+        static let relayEnabled = "bossRemote.settings.relayEnabled"
     }
 
     @Published public var launchAtLogin: Bool {
@@ -51,6 +52,11 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(historyEnabled, forKey: Key.historyEnabled) }
     }
 
+    /// Off by default. Forwards remote buttons and touch to 127.0.0.1 only.
+    @Published public var relayEnabled: Bool {
+        didSet { defaults.set(relayEnabled, forKey: Key.relayEnabled) }
+    }
+
     @Published public var appearance: AppearancePreference {
         didSet {
             defaults.set(appearance.rawValue, forKey: Key.appearance)
@@ -70,6 +76,7 @@ public final class AppSettings: ObservableObject {
         pointerSpeed = defaults.object(forKey: Key.pointerSpeed) as? Double ?? 1
         scrollSpeed = defaults.object(forKey: Key.scrollSpeed) as? Double ?? 1
         historyEnabled = defaults.object(forKey: Key.historyEnabled) as? Bool ?? true
+        relayEnabled = defaults.object(forKey: Key.relayEnabled) as? Bool ?? false
         appearance = AppearancePreference(
             rawValue: defaults.string(forKey: Key.appearance) ?? ""
         ) ?? .dark

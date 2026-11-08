@@ -1,5 +1,7 @@
 # 老板遥控 Windows
 
+Mac 把遥控器事件转发到 Linux 云端的说明在 [RELAY.md](RELAY.md)。那条链路只走本机回环，不代替下面的 Windows 蓝牙端口。
+
 把 Apple Siri Remote 第 3 代（A2854）接到 Windows 上，当作触控板和快捷键键盘。
 
 这是独立端口，不是把 Swift 逐行翻译过来。macOS 工程没有改行为。Windows 代码只在 `windows/`。
